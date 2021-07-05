@@ -15,7 +15,7 @@ const tp = new TransactionPool();
 const p2pServer = new P2pServer(bc, tp);
 const miner = new Miner(bc, tp, wallet, p2pServer);
 
-app.use(bodyParser.json());
+app.use(express.json({ limit: "90mb" }));
 
 app.get('/blocks', (req, res) => {
   res.json(bc.chain);
@@ -46,9 +46,30 @@ app.post("/new/account", (req, res) => {
 
     res.json({
       publicKey: walletNewAccount.publicKey,
-      address: walletNewAccount.balance,
-      privateKey: walletNewAccount.keyPair.priv,
+      balance: walletNewAccount.balance,
+      keyPair: walletNewAccount.keyPair,
     });
+});
+
+
+app.post("/send", (req, res) => {
+  const { recipient, amount, senderWallet } = req.body;
+  const transaction = wallet.createTransactionUser(recipient, amount, bc, tp, senderWallet);
+  p2pServer.broadcastTransaction(transaction);
+  res.json(transaction);
+});
+
+app.get("/balance", (req, res) => {
+   let tp, bc;
+   const { address } = req.query;
+   tp = new TransactionPool();
+   bc = new Blockchain();
+
+  const result = wallet.calculateBalanceUser(bc, address);
+  console.log(result);
+  res.json({
+    balance: result,
+  });
 });
 
 app.get('/mine-transactions', (req, res) => {

@@ -49,6 +49,7 @@ class Transaction {
   }
 
   static signTransaction(transaction, senderWallet) {
+    console.log(senderWallet);
     transaction.input = {
       timestamp: Date.now(),
       amount: senderWallet.balance,
